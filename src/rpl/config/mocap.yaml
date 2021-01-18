@@ -1,0 +1,13 @@
+#
+# Definition of all trackable objects
+# Identifier corresponds to Trackable ID set in Tracking Tools
+#
+rigid_bodies:
+    '23':
+        pose: /mavros/vision_pose/pose
+        # pose: /mavros/vision_pose/pose/fast
+        pose2d: /mavros/mocap/pose2d
+        child_frame_id: base_link
+        parent_frame_id: map
+optitrack_config:
+        multicast_address: 224.0.0.1 # 192.168.1.100 # 224.0.0.1

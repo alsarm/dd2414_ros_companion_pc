@@ -1,0 +1,18 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/rpl/drone_ws/devel/include",
+        "/opt/ros/noetic/include",
+        "/home/rpl/drone_ws/src/mocap_optitrack/include",
+        "/home/rpl/drone_ws/src/realsense-ros/realsense2_camera/include",
+        "/usr/include"
+      ],
+      "name": "Linux"
+    }
+  ]
+}

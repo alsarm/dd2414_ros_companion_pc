@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+
+<launch>
+    <!-- Run RVIZ visualizaiton-->
+    <!--<node type="rviz" name="rviz" pkg="rviz"/> -->
+    <arg name="enable_mocap"    default="true" />
+    <arg name="fake_mocap"      default="false" />
+    <!-- RealSense Cameras -->
+    <arg name="use_l515"        default="true" />
+    <arg name="use_d435_l"      default="true" />
+    <arg name="use_d435_r"      default="true" />
+
+
+
+    <arg name="uav" default="awesome_drone" />
+    <!--arg name="fcu_device" default="/dev/serial/by-id/usb-3D_Robotics_PX4_FMU_v5.x_0-if00" /-->
+    <arg name="fcu_device" default="/dev/ttyACM0" />
+    <arg name="tgt_system" default="23" />
+
+    <arg name="fcu_baud" default="57600" />
+    <!--arg name="fcu_baud" default="921600" /-->
+    <arg name="fcu_url" default="$(arg fcu_device):$(arg fcu_baud)" />
+    <arg name="gcs_url" default="udp://@224.0.0.1:14550" />
+    <arg name="tgt_component" default="1" />
+    <arg name="px4_config_yaml" default="$(find rpl)/config/$(arg uav)/px4_config.yaml" />
+    <arg name="px4_pluginlists_yaml" default="$(find rpl)/config/$(arg uav)/px4_pluginlists.yaml" />
+
+    <node pkg="mavros" type="mavros_node" name="mavros" respawn="true" clear_params="true" output="screen">
+        <param name="fcu_url" value="$(arg fcu_url)" />
+        <param name="gcs_url" value="$(arg gcs_url)" />
+        <param name="target_system_id" value="$(arg tgt_system)" />
+        <param name="target_component_id" value="$(arg tgt_component)" />
+        <rosparam command="load" file="$(arg px4_config_yaml)" />
+        <rosparam command="load" file="$(arg px4_pluginlists_yaml)" />
+    </node>
+
+    <arg name="mocap_config_file" default="$(find rpl)/config/mocap.yaml" />
+
+    <node pkg="mocap_optitrack" type="mocap_node" name="mocap" respawn="true" if="$(arg enable_mocap)">
+      <remap from="pose" to="~/pose" unless="$(arg fake_mocap)"/>
+      <remap from="/mavros/vision_pose/pose" to="/mavros/vision_pose/pose/true" if="$(arg fake_mocap)"/> -->
+      <rosparam file="$(arg mocap_config_file)" command="load" />
+    </node>
+
+    <node pkg="rpl" type="distance_sensor_override.py" name="distance_sensor_override" respawn="true" if="$(arg fake_mocap)"/>
+
+
+    <!--
+    <param name="robot_description" textfile="$(find rpl)/urdf/$(arg uav).urdf" />
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+    -->
+	<node pkg="rosbag" type="record" name="rosbag_record_mavros_flight"
+       args="record --lz4 -o /home/rpl/drone_ws/src/rpl/flight_bags/mavros/ -e '(.*)mavros(.*)'"/>
+
+  <!-- Include L515 demo for pointcloud+image overlap visualizaiton-->
+  <group if="$(arg use_l515)">
+      <node pkg="tf" type="static_transform_publisher" name="L515" args="0.13 0 0 0 0 0 1 base_link l515_link 100" />
+      <include file="$(find realsense2_camera)/launch/rs_rgbd.launch"  >
+          <arg name="camera"            value="l515"/>
+          <arg name="usb_port_id"       value="2-4"/>
+          <arg name="serial_no"         value="f0231819"/>
+          <arg name="filters"           value="pointcloud"/>
+          <arg name="color_width"       value="1280"/>
+          <arg name="color_height"      value="720"/>
+        </include>
+  </group>
+    
+  <!-- Include D435i (left) demo for pointcloud+image overlap visualizaiton-->
+  <group if="$(arg use_d435_l)">
+      <node pkg="tf" type="static_transform_publisher" name="D435i_left"  args="0.077  0.077 -0.01  0.785 0 0 base_link d435_l_link 100" />
+      <include file="$(find realsense2_camera)/launch/rs_camera.launch"  >
+          <arg name="camera"            value="d435_l"/>
+          <arg name="usb_port_id"       value="2-3"/>
+          <arg name="serial_no"         value="021222070521"/>
+          <arg name="filters"           value="spatial,temporal,pointcloud"/>
+        </include>
+  </group>
+
+  <!-- Include D435i (right) demo for pointcloud+image overlap visualizaiton-->
+  <group if="$(arg use_d435_r)">
+      <node pkg="tf" type="static_transform_publisher" name="D435i_right" args="0.077 -0.077 -0.01 -0.785 0 0 base_link d435_r_link 100" />
+      <include file="$(find realsense2_camera)/launch/rs_camera.launch"  >
+          <arg name="camera"            value="d435_r"/>
+          <arg name="usb_port_id"       value="2-1"/>
+          <arg name="serial_no"         value="843112071639"/>
+          <arg name="filters"           value="spatial,temporal,pointcloud"/>
+        </include>
+  </group>
+    
+</launch>

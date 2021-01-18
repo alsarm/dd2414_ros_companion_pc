@@ -1,0 +1,2 @@
+mocap_optitrack:realsense-ros/realsense2_camera:realsense-ros/realsense2_description:rpl
+-DCATKIN_DEVEL_PREFIX=/home/rpl/drone_ws/devel -DCMAKE_INSTALL_PREFIX=/home/rpl/drone_ws/install -G Unix Makefiles
